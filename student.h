@@ -1,20 +1,23 @@
-#include <iostream>
-#include <string.h>
-#include <vector>
-#include <Courses.h>
-class student
-{
+#ifndef STUDENT_H
+#define STUDENT_H
+
+#include "User.h"
+#include <string>
+using namespace std;
+
+class Student : public User {
 private:
-    string ID;
-    string name;
-    string password;
-    int year;   
-    vector <Courses*> list_of_courses;
+    string id;
+    string hoTen;
+    int namHoc;
+    string nganhHoc;
+
 public:
-    student (string ma_sv,string ten_sv,string mat_khau,int nam_sv){};
-    string getID();
-    string getName();
-    int getyear();
-    vector<Course*>& getCourses();
-    bool registerCourse(Course* course);
+    Student(const string& tenDN, const string& matKhau,
+            const string& id, const string& hoTen,
+            int namHoc, const string& nganhHoc);
+
+    void Menu() override;
 };
+
+#endif

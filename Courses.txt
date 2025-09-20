@@ -1,1 +1,3 @@
-
+IT101|Ky_thuat_lap_trinh|3
+IT102|Cau_truc_du_lieu|4
+IT103|Co_so_du_lieu|3
