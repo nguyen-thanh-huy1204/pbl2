@@ -29,12 +29,12 @@ int main() {
             int nam;
             string nganh;
             iss >> nam >> nganh;
-            dsUser.push_back(new Student(tenDN, mk, id, ten, nam, nganh));
+            dsUser.push_back(new Student(tenDN, mk, id, ten, nam));
         }
     }
     fin.close();
 
-    ifstream finCourse("courses.txt");
+    ifstream finCourse("Courses.txt");
     while (true) {
         Course c("", "", 0);
         if (!c.loadFromFile(finCourse)) break;
@@ -50,12 +50,12 @@ int main() {
     cin >> matKhau;
 
     User* u = nullptr;
-    for (User* x : dsUser) {
-        if (x->getTenDN() == tenDangNhap) {
-            if (x->kiemTraMatKhau(matKhau)) {
-                u = x;
-            }
-            break;
+    for (int i = 0; i < dsUser.size(); i++) {
+        if (dsUser[i]->getTenDN() == tenDangNhap && 
+            dsUser[i]->kiemTraMatKhau(matKhau)) 
+        {
+            u = dsUser[i];
+            break; 
         }
     }
 
@@ -65,7 +65,6 @@ int main() {
     } else {
         cout << "Sai ten dang nhap hoac mat khau!\n";
     }
-
 
     for (User* x : dsUser) delete x;
 
