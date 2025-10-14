@@ -1,34 +1,39 @@
 #include "Course.h"
-#include <sstream>
+#include <iostream>
+using namespace std;
 
-Course::Course(const string& id, const string& name, int cr)
-    : courseID(id), courseName(name), credits(cr) {}
+Course::Course(const string& id, const string& name, int credits, const string& mon_tien_quyet)
+    : courseID(id), courseName(name), creditCourse(credits), ID_mon_tien_quyet(mon_tien_quyet) {}
+
+string Course::getCourseID() const { return courseID; }
+string Course::getCourseName() const { return courseName; }
+int Course::getCreditCount() const { return creditCourse; }
+string Course::getPrerequisiteCourseID() const { return ID_mon_tien_quyet; }
 
 void Course::display() const {
-    cout << courseID << " - " << courseName
-         << " (" << credits << " tin chi)" << endl;
+    cout << "Ma mon hoc: " << courseID
+         << " | Ten mon hoc: " << courseName
+         << " | So tin chi: " << creditCourse;
+    if (!ID_mon_tien_quyet.empty())
+        cout << " | Mon tien quyet: " << ID_mon_tien_quyet;
+    cout << endl;
 }
 
 void Course::saveToFile(ostream& out) const {
-    string tmp = courseName;
-    for (auto& ch : tmp) {
-        if (ch == ' ') ch = '_';
-    }
-    out << courseID << " " << tmp << " " << credits << "\n";
+    out << courseID << " " << courseName << " " << creditCourse << " " << ID_mon_tien_quyet << endl;
 }
 
 bool Course::loadFromFile(istream& in) {
-    string id, name;
-    int cr;
-    if (!(in >> id >> name >> cr)) return false;
+    string id, name, tien_quyet;
+    int credits;
 
-    for (auto& ch : name) {
-        if (ch == '_') ch = ' ';
-    }
+    if (!(in >> id >> name >> credits >> tien_quyet))
+        return false;
 
     courseID = id;
     courseName = name;
-    credits = cr;
+    creditCourse = credits;
+    ID_mon_tien_quyet = tien_quyet;
 
     return true;
 }
