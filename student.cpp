@@ -1,26 +1,35 @@
-#include "Student.h"
-#include <iostream>
+#ifndef STUDENT_H
+#define STUDENT_H
+
+#include "User.h"
+#include "Course.h"
+#include <vector>
+#include <string>
 using namespace std;
 
-Student::Student(const string& tenDN, const string& matKhau,
-                 const string& id, const string& hoTen,
-                 int namHoc, const string& nganhHoc)
-    : User(tenDN, matKhau), id(id), hoTen(hoTen),
-      namHoc(namHoc), nganhHoc(nganhHoc) {}
+class Student : public User {
+private:
+    string id;                    
+    string hoTen;                
+    int namHoc;                    
+    vector<Course> danhSachDangKy;  
 
-void Student::Menu() {
-    cout << "\n===== MENU SINH VIEN =====\n";
-    cout << "Xin chao " << hoTen << " (" << id << ")\n";
-    cout << "Nam hoc: " << namHoc << ", Nganh: " << nganhHoc << "\n";
-    cout << "1. Dang ky hoc phan\n";
-    cout << "2. Xem hoc phan da dang ky\n";
-    cout << "0. Thoat\n";
-    int chon;
-    cout << "Chon: ";
-    cin >> chon;
-    if(chon == 1) {
-        cout << ">> Chuc nang dang ky hoc phan (chua lam)\n";
-    } else if(chon == 2) {
-        cout << ">> Chuc nang xem hoc phan (chua lam)\n";
-    }
-}
+public:
+    Student(const string& tenDN, const string& matKhau,
+            const string& id, const string& hoTen,
+            int namHoc);
+
+    void Menu() override;
+
+    void dangKyHocPhan();
+
+    void xemHocPhanDaDangKy() const;
+
+    void huyHocPhan(const string& idHP);
+
+    void luuVaoFile() const;
+
+    void taiTuFile();
+};
+
+#endif
