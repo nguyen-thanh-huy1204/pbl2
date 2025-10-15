@@ -1,3 +1,5 @@
-IT101|Ky_thuat_lap_trinh|3
-IT102|Cau_truc_du_lieu|4
-IT103|Co_so_du_lieu|3
+C001 Lap_trinh_CPP 3 None
+C002 Cau_truc_du_lieu 3 C001
+C003 Co_so_du_lieu 3 C002
+C004 Lap_trinh_huong_doi_tuong 3 C001
+C005 Mang_may_tinh 3 None
