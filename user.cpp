@@ -1,26 +1,16 @@
 #include "User.h"
 
-User::User(const string& tenDN, const string& matKhau)
-    : tenDN(tenDN), matKhau(matKhau) {}
+User::User(): id(""), username(""), password(""), role("") {}
+User::User(const string& id_, const string& username_, const string& password_, const string& role_)
+    : id(id_), username(username_), password(password_), role(role_) {}
+User::~User() {}
 
-string User::getTenDN() const {
-    return tenDN;
-}
+string User::getId() const { return id; }
+string User::getUsername() const { return username; }
+string User::getPassword() const { return password; }
+string User::getRole() const { return role; }
+bool User::checkPassword(const string& pw) const { return password == pw; }
 
-bool User::kiemTraMatKhau(const string& mk) const {
-    return mk == matKhau;
-}
-
-void User::doiMatKhau() {
-    string mkCu, mkMoi;
-    cout << "Nhap mat khau hien tai: ";
-    cin >> mkCu;
-    if(mkCu != matKhau) {
-        cout << "Mat khau khong dung!\n";
-        return;
-    }
-    cout << "Nhap mat khau moi: ";
-    cin >> mkMoi;
-    matKhau = mkMoi;
-    cout << "Doi mat khau thanh cong!\n";
+string User::toLine() const {
+    return id + "|" + username + "|" + password + "|" + role + "|";
 }

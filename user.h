@@ -2,24 +2,25 @@
 #define USER_H
 
 #include <string>
-#include <iostream>
 using namespace std;
 
 class User {
 protected:
-    string tenDN;
-    string matKhau;
-
+    string id;
+    string username;
+    string password;
+    string role; // "ADMIN","LECTURER","STUDENT"
 public:
-    User(const string& tenDN, const string& matKhau);
-
-    virtual void Menu() = 0;
-
-    string getTenDN() const;
-    
-    bool kiemTraMatKhau(const string& mk) const;
-
-    void doiMatKhau();
+    User();
+    User(const string& id, const string& username, const string& password, const string& role);
+    virtual ~User();
+    string getId() const;
+    string getUsername() const;
+    string getPassword() const;
+    string getRole() const;
+    bool checkPassword(const string& pw) const;
+    // toLine/fromLine basic (derived classes will extend)
+    virtual string toLine() const;
 };
 
 #endif

@@ -1,0 +1,8 @@
+1022863|Ky thuat lap trinh|3.000000|
+1023060|TH ky thuat lap trinh|0.000000|
+1023280|Cau truc du lieu|2.000000|
+1023693|Lap trinh huong doi tuong|2.500000|
+1023290|Co so du lieu|2.000000|
+1023690|PBL 2: Du an co so lap trinh|2.000000|
+1020141|Phan tich & thiet ke huong doi tuong|2.000000|
+1020252|Cong nghe phan mem|2.000000|

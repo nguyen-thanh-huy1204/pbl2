@@ -1,162 +1,178 @@
 #include "Student.h"
-#include "Course.h"
-#include <iostream>
-#include <fstream>
 #include <sstream>
+#include <iostream>
+#include <iomanip>
 using namespace std;
-void tamDung() {
-    cout << "Nhan Enter de tiep tuc...";
-    cin.ignore();
-    cin.get();
-}
-Student::Student(const string& tenDN, const string& matKhau,
-                 const string& id, const string& hoTen,
-                 int namHoc)
-    : User(tenDN, matKhau), id(id), hoTen(hoTen),
-      namHoc(namHoc) {}
 
-// ========== Đọc danh sách học phần từ file ==========
-vector<Course> docDanhSachHocPhan() {
-    vector<Course> ds;
-    ifstream in("Courses.txt");
-    if (!in) {
-        cout << "Khong mo duoc file Course.txt!\n";
-        return ds;
-    }
-    Course c;
-    while (c.loadFromFile(in)) {
-        ds.push_back(c);
-    }
-    return ds;
+static string trimStr(const string &s) {
+    size_t a = 0, b = s.size();
+    while (a < b && isspace((unsigned char)s[a])) ++a;
+    while (b > a && isspace((unsigned char)s[b-1])) --b;
+    return s.substr(a, b - a);
 }
 
-// ========== Đăng ký học phần ==========
-void Student::dangKyHocPhan() {
-    vector<Course> ds = docDanhSachHocPhan();
-    if (ds.empty()) {
-        cout << "Chua co hoc phan nao trong he thong!\n";
-        return;
+Student::Student(): User(), fullname(""), major("") {}
+Student::Student(const string& id, const string& username, const string& password,
+                 const string& fullname, const string& major)
+    : User(id, username, password, "STUDENT"), fullname(fullname), major(major) {}
+
+bool Student::isEnrolled(const string& cid) const {
+    for (int i = 0; i < enrolledCourseIds.size(); ++i)
+        if (enrolledCourseIds[i] == cid) return true;
+    return false;
+}
+
+void Student::enroll(const string& cid, const Schedule& sch) {
+    if (!isEnrolled(cid)) {
+        enrolledCourseIds.push_back(cid);
+        enrolledSchedules.push_back(sch);
     }
+}
 
-    cout << "\n===== DANH SACH HOC PHAN =====\n";
-    for (const auto& hp : ds) {
-        hp.display();
+void Student::withdraw(const string& cid) {
+    for (int i = 0; i < enrolledCourseIds.size(); ++i) {
+        if (enrolledCourseIds[i] == cid) {
+            enrolledCourseIds.erase(i);
+            enrolledSchedules.erase(i);
+            return;
+        }
     }
+}
 
-    string idHP;
-    cout << "\nNhap ma hoc phan muon dang ky: ";
-    cin >> idHP;
+bool Student::hasCompleted(const string& cid) const {
+    for (int i = 0; i < completedCourseIds.size(); ++i)
+        if (completedCourseIds[i] == cid) return true;
+    return false;
+}
 
-    // Tim hoc phan co ma tuong ung
-    for (const auto& hp : ds) {
-        if (hp.getCourseID() == idHP) {
+void Student::completeCourse(const string& cid) {
+    if (!hasCompleted(cid)) completedCourseIds.push_back(cid);
+}
 
-            // Kiem tra mon tien quyet
-            string tienQuyet = hp.getPrerequisiteCourseID();
-            bool daHocTienQuyet = true;
-            if (!tienQuyet.empty()) {
-                daHocTienQuyet = false;
-                for (const auto& mon : danhSachDangKy) {
-                    if (mon.getCourseID() == tienQuyet) {
-                        daHocTienQuyet = true;
-                        break;
-                    }
+bool Student::hasConflictWithCourseSchedule(const Schedule& newSch) const {
+    for (int i = 0; i < enrolledSchedules.size(); ++i) {
+        if (enrolledSchedules[i].conflictsWith(newSch)) return true;
+    }
+    return false;
+}
+
+string Student::toLine() const {
+    // id|username|password|role|fullname|major|enrollPart|completed1;completed2
+    string out = id + "|" + username + "|" + password + "|" + role + "|" + fullname + "|" + major + "|";
+    for (int i = 0; i < enrolledCourseIds.size(); ++i) {
+        if (i) out += ";";
+        out += enrolledCourseIds[i] + "," + enrolledSchedules[i].toLine();
+    }
+    out += "|";
+    for (int i = 0; i < completedCourseIds.size(); ++i) {
+        if (i) out += ";";
+        out += completedCourseIds[i];
+    }
+    return out;
+}
+
+void Student::fromLine(const string& line) {
+    stringstream ss(line);
+    
+    // Format: id|username|password|role|fullname|major|enrollPart|completed
+    if (!getline(ss, id, '|') || 
+        !getline(ss, username, '|') ||
+        !getline(ss, password, '|') ||
+        !getline(ss, role, '|') ||
+        !getline(ss, fullname, '|') ||
+        !getline(ss, major, '|')) {
+        throw runtime_error("Khong du truong du lieu cho student");
+    }
+    
+    // Read enrolled list (until next '|')
+    string rest;
+    getline(ss, rest, '|');
+
+    // normalize
+    id = trimStr(id);
+    username = trimStr(username);
+    password = trimStr(password);
+    role = trimStr(role);
+    fullname = trimStr(fullname);
+    major = trimStr(major);
+
+    enrolledCourseIds.clear(); enrolledSchedules.clear();
+    string cur;
+    for (size_t i = 0; i < rest.size(); ++i) {
+        char ch = rest[i];
+        if (ch == ';') {
+            if (!cur.empty()) {
+                size_t p = cur.find(',');
+                if (p != string::npos) {
+                    string cid = cur.substr(0, p);
+                    string schedPart = cur.substr(p+1);
+                    Schedule s; s.fromLine(schedPart);
+                    cid = trimStr(cid);
+                    enrolledCourseIds.push_back(cid);
+                    enrolledSchedules.push_back(s);
                 }
+                cur.clear();
             }
-
-            if (daHocTienQuyet || tienQuyet == "None") {
-                danhSachDangKy.push_back(hp);
-                cout << ">> Dang ky thanh cong!\n";
-                luuVaoFile();
-            } else {
-                cout << ">> Chua hoc mon tien quyet " << tienQuyet << ", khong the dang ky!\n";
-            }
-
-            return;
+        } else cur.push_back(ch);
+    }
+    if (!cur.empty()) {
+        size_t p = cur.find(',');
+        if (p != string::npos) {
+            string cid = cur.substr(0, p);
+            string schedPart = cur.substr(p+1);
+            Schedule s; s.fromLine(schedPart);
+            cid = trimStr(cid);
+            enrolledCourseIds.push_back(cid);
+            enrolledSchedules.push_back(s);
         }
     }
 
-    cout << ">> Khong tim thay hoc phan co ma " << idHP << "!\n";
-}
-
-
-// ========== Xem danh sách học phần đã đăng ký ==========
-void Student::xemHocPhanDaDangKy() const {
-    if (danhSachDangKy.empty()) {
-        cout << "Ban chua dang ky hoc phan nao!\n";
-        return;
-    }
-    cout << "\n===== HOC PHAN DA DANG KY =====\n";
-    for (const auto& hp : danhSachDangKy) {
-        hp.display();
+    // Read completed list (optional)
+    string completedStr;
+    if (getline(ss, completedStr)) {
+        completedCourseIds.clear();
+        string cur2;
+        for (size_t i = 0; i < completedStr.size(); ++i) {
+            char ch = completedStr[i];
+            if (ch == ';') { if (!cur2.empty()) { completedCourseIds.push_back(trimStr(cur2)); cur2.clear(); } }
+            else cur2.push_back(ch);
+        }
+        if (!cur2.empty()) completedCourseIds.push_back(trimStr(cur2));
     }
 }
 
-// ========== Hủy học phần ==========
-void Student::huyHocPhan(const string& idHP) {
-    for (auto it = danhSachDangKy.begin(); it != danhSachDangKy.end(); ++it) {
-        if (it->getCourseID() == idHP) {
-            danhSachDangKy.erase(it);
-            cout << ">> Da huy hoc phan " << idHP << "!\n";
-            luuVaoFile();
-            return;
+void Student::displayShort() const {
+    cout << "[" << id << "] " << fullname << " - " << major << "\n";
+}
+
+// return enrolled schedules (parallel to enrolledCourseIds)
+Vector<Schedule> Student::getEnrolledSchedules() const {
+    return enrolledSchedules;
+}
+
+void Student::displaySchedule() const {
+    cout << "\n========================================\n";
+    cout << "THOI KHOA BIEU CUA " << fullname << " (" << id << ")\n";
+    cout << "========================================\n";
+    
+    if (enrolledCourseIds.size() == 0) {
+        cout << "CHUA DANG KY MON HOC NAO.\n";
+    } else {
+        cout << left << setw(12) << "MA MON HOC" 
+             << left << setw(30) << "TEN MON HOC"
+             << left << setw(20) << "LICH HOC"
+             << left << setw(10) << "PHONG HOC" << "\n";
+        cout << "----------------------------------------"
+             << "----------------------------------------\n";
+        
+        for (int i = 0; i < enrolledCourseIds.size(); ++i) {
+            // Note: We only have course ID and schedule, not course name
+            // In a better system, we would look up the course name from the course object
+            cout << left << setw(12) << enrolledCourseIds[i]
+                 << left << setw(30) << ""  // No course name available here
+                 << left << setw(20) << enrolledSchedules[i].toReadable()
+                 << left << setw(10) << enrolledSchedules[i].getRoom() << "\n";
         }
     }
-    cout << ">> Khong tim thay hoc phan " << idHP << "!\n";
-}
-
-// ========== Lưu danh sách đăng ký vào file ==========
-void Student::luuVaoFile() const {
-    string fileName = tenDN + "dangky.txt";
-    ofstream out(fileName);
-    if (!out) {
-        cout << "Khong mo duoc file de luu!\n";
-        return;
-    }
-    for (const auto& hp : danhSachDangKy) {
-        hp.saveToFile(out);
-    }
-}
-
-// ========== Tải danh sách đăng ký từ file ==========
-void Student::taiTuFile() {
-    string fileName = tenDN + "dangky.txt";
-    ifstream in(fileName);
-    if (!in) return;
-
-    Course c;
-    danhSachDangKy.clear();
-    while (c.loadFromFile(in)) {
-        danhSachDangKy.push_back(c);
-    }
-}
-
-// ========== Menu ==========
-void Student::Menu() {
-    taiTuFile();
-    int chon;
-    do {
-        cout << "\n===== MENU SINH VIEN =====\n";
-        cout << "Xin chao " << hoTen << " (" << id << ")\n";
-        cout << "1. Dang ky hoc phan\n";
-        cout << "2. Xem hoc phan da dang ky\n";
-        cout << "3. Huy hoc phan\n";
-        cout << "0. Thoat\n";
-        cout << "Chon: ";
-        cin >> chon;
-
-        if (chon == 1) {
-            dangKyHocPhan();
-            tamDung();
-        } else if (chon == 2) {
-            xemHocPhanDaDangKy();
-            tamDung();
-        } else if (chon == 3) {
-            string idHP;
-            cout << "Nhap ma hoc phan muon huy: ";
-            cin >> idHP;
-            huyHocPhan(idHP);
-            tamDung();
-        }
-    } while (chon != 0);
+    cout << "========================================\n";
 }
